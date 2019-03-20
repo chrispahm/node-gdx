@@ -1,0 +1,27 @@
+{
+  "name": "node-gdx",
+  "version": "1.0.0",
+  "description": "Node.js bindings for GAMS GDX containers.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/test.js",
+    "install": "node-gyp rebuild"
+  },
+  "keywords": [
+    "GDX",
+    "GAMS",
+    "Optimisation"
+  ],
+  "author": "Christoph Pahmeyer",
+  "license": "MIT",
+  "gypfile": true,
+  "dependencies": {
+    "node-gyp-build": "^3.8.0"
+  },
+  "devDependencies": {
+    "prebuildify": "^2.11.0"
+  }
+}
