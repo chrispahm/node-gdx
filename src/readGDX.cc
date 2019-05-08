@@ -1,15 +1,54 @@
 #include <node_api.h>
 #include <stdio.h>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+#include "api/gdxcc.h"
+
+using namespace std;
+
+static gdxStrIndexPtrs_t Indx;
+static gdxStrIndex_t     IndxXXX;
+static gdxValues_t       Values;
+
+void ReportGDXError(gdxHandle_t PGX) {
+	char S[GMS_SSSIZE];
+
+	std::cout << "**** Fatal GDX Error" << endl;
+	gdxErrorStr(PGX, gdxGetLastError(PGX), S);
+	std::cout << "**** " << S << endl;
+	exit(1);
+}
+
+void ReportIOError(int N, const std::string &msg) {
+	std::cout << "**** Fatal I/O Error = " << N << " when calling " << msg << endl;
+	exit(1);
+}
+
+void WriteData(gdxHandle_t PGX, const char *s, const double V) {
+	strcpy(Indx[0], s);
+	Values[GMS_VAL_LEVEL] = V;
+	gdxDataWriteStr(PGX, (const char **)Indx, Values);
+}
+
 
 napi_value readGDX(napi_env, napi_callback_info info) {
   // pointer für Lesen/Schreiben auf gdx file
-  gdxHandle_t Tptr=NULL;
+  gdxHandle_t PGX = NULL;
+  char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
+  int         ErrNr;
+  int         VarNr;
+  int         NrRecs;
+  int         N;
+  int         Dim;
+  int         VarTyp;
+  int         D;
   
   // nrSy Anzahl Symbole im gdx file, NrUel Anzahl elements in gdx file 
   int NrSy, NrUel;
   
-  GDX PGX(Sysdir, Msg); 
-  if (Msg != "") {
+  if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
     cout << "**** Could not load GDX library" << endl << "**** " << Msg << endl;
     exit(1);
   }

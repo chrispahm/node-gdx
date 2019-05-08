@@ -1,3 +1,3 @@
-var binding = require('node-gyp-build')(__dirname)
-
+var binding = require('./build/Release/node-gdx.node')
+console.log(binding)
 module.exports = binding.readGDX
