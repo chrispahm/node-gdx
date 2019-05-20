@@ -1,27 +1,38 @@
 # node-gdx
-Node.js bindings for GAMS GDX containers.
+Read GAMS GDX files in Node.js. Does NOT require a GAMS installation.
 
-## Purpose
-This repository aims to create a native C++ Package for Node.js to allow for reading (and writing) GAMS GDX containers.
-
-## Mockup example usage
+## Usage
 ```js
-const gdx = require('fs')
 const gdx = require('node-gdx')
 
-const file = fs.readFileSync('test.gdx')
-
-gdx.read(file,'symbolInGDX')
+gdx.read(file)
   .then(data => {
-    /* where data = [{
-      'domain1': 'exampleString',
-      'domain2: 'anotherExample',
-      'domainN: 'string',
-      'value': 1234 // value always has to be an integer, or NaN
-    },
-    ...
+    /* where data = {
+      Demand: [{
+          '0': 'New-York',
+          Value: 324
+        },
+        {
+          '0': 'Chicago',
+          Value: 299
+        },
+        {
+          '0': 'Topeka',
+          Value: 274
+        }
+      ]
+    }
     ]
     */
   })
+  .catch(e => {
+    console.error(e)
+  })
 ```
+
+## API
+### read(file: string, *symbol: string*)
+
+Read a GDX file from disk. Returns all symbols in the GDX container by default,
+unless otherwise specified by the optional second function argument.
 

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "node test/test.js",
-    "install": "node-gyp rebuild"
+    "clean": "node-gyp clean",
+    "build": "node-gyp rebuild"
   },
   "keywords": [
     "GDX",
@@ -19,9 +20,9 @@
   "license": "MIT",
   "gypfile": true,
   "dependencies": {
-    "node-gyp-build": "^3.8.0"
+    "node-addon-api": "^1.6.3"
   },
   "devDependencies": {
-    "prebuildify": "^2.11.0"
+    "node-gyp": "^4.0.0"
   }
 }
