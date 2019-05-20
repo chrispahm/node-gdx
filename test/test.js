@@ -1,6 +1,9 @@
 const readGDX = require('../index.js')
 
-readGDX('demanddata.gdx')
+readGDX()
 .then(data => {
   console.log(data)
+})
+.catch(e => {
+  console.error(e);
 })

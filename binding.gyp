@@ -4,7 +4,7 @@
         "cflags!": [ "-fno-exceptions" ],
         "cflags_cc!": [ "-fno-exceptions" ],
         "sources": [
-            "src/test.cc",
+            "src/main.cc",
             "src/api/gdxcc.c"
         ],
         'include_dirs': [
