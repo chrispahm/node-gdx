@@ -33,11 +33,11 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
-// #include <napi.h>
+#include <napi.h>
 #include "api/gdxcc.h"
 
 using namespace std;
-//using namespace Napi;
+using namespace Napi;
 
 static gdxStrIndexPtrs_t Indx;
 static gdxStrIndex_t     IndxXXX;
@@ -58,112 +58,94 @@ void ReportIOError(int N, const std::string &msg) {
 	exit(1);
 }
 
+Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
+	// setup default napi environment
+	Napi::Env env = info.Env();
+	auto deferred = Napi::Promise::Deferred::New(env);
+	
+	if (info.Length() == 1 && info[0].IsString()) {
+		std::string pathString = info[0].As<Napi::String>();
+		char path[pathString.size() + 1];
+		strcpy(path, pathString.c_str());
+		
+		// define all variables used
+		gdxHandle_t PGX = NULL;
+		char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
+		int         ErrNr;
+		int         VarNr;
+		int         SymNr;
+		int         UniqReqs;
+		int         NrRecs;
+		int         N;
+		int         Dim;
+		int         VarTyp;
+		int         D;
+		int         S;
+		// set directory for dynamilk link files
+		strcpy(Sysdir, "dll");
 
-Void Init(Env env) {
-	// define all variables used
-	gdxHandle_t PGX = NULL;
-	char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
-	int         ErrNr;
-	int         VarNr;
-	int         SymNr;
-	int         UniqReqs;
-	int         NrRecs;
-	int         N;
-	int         Dim;
-	int         VarTyp;
-	int         D;
-	int         S;
-	// set directory for dynamilk link files
-	strcpy(Sysdir, "dll");
+		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
+			cout << "**** Could not load GDX library" << endl << "**** "
+					 << Msg << endl;
+			exit(1);
+		}
 
-	if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
-		cout << "**** Could not load GDX library" << endl << "**** "
-		     << Msg << endl;
-		exit(1);
-	}
+		GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
 
-	GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
+		gdxOpenRead(PGX, path, &ErrNr);
+		if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
 
-	gdxOpenRead(PGX, argv[1], &ErrNr);
-	if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
+		gdxSystemInfo(PGX, &SymNr, &UniqReqs);
+		cout << "Symbols in GDX: " << SymNr << ", and " << UniqReqs
+				 << " unique records." << endl;
 
-	gdxSystemInfo(PGX, &SymNr, &UniqReqs);
-	cout << "Symbols in GDX: " << SymNr << ", and " << UniqReqs
-	     << " unique records." << endl;
+		// init empty JS object
+		Napi::Object data = Napi::Object::New(env);
 
-	// init empty JS object
-	Object export = Object::New(env);
-
-	for (S = 1; S <= SymNr; S++) {
-		VarNr = S;
-		gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
-		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
-		// add VarName as object property and assign empty vector of
-		// length NrRecs as its value
-		export.Set(VarName, int NrRows[NrRecs]);
-		for (size_t i = 0; i < NrRecs; i++) {
-			gdxDataReadStr(PGX, Indx, Values, &N);
-			for (D = 0; D < Dim; D++) {
-				cout << (D ? '.' : ' ') << Indx[D];
-				cout << " = " << Values[GMS_VAL_LEVEL] << endl;
+		for (S = 1; S <= SymNr; S++) {
+			VarNr = S;
+			gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
+			if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
+			// add VarName as object property and assign empty vector of
+			// length NrRecs as its value
+			Napi::Array array = Napi::Array::New(env);
+			data.Set(VarName, array);
+			
+			for (int i = 0; i < NrRecs; i++) {
+				Napi::Object row = Object::New(env);
+				gdxDataReadStr(PGX, Indx, Values, &N);
+				for (D = 0; D < Dim; D++) {
+					row.Set(D, Indx[D]);
+				};
+				row.Set("Value", Values[GMS_VAL_LEVEL]);
+				array[i] = row;
 			};
 		};
-		cout << "All solution values shown" << endl;
 		gdxDataReadDone(PGX);
-	}
 
-	if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
+		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
+		
+		deferred.Resolve(data);
+		
+	} else if (!info[0].IsString()) { 
+		deferred.Reject(
+      Napi::TypeError::New(env, "Invalid argument type").Value()
+    );
+	} else {
+		deferred.Reject(
+      Napi::TypeError::New(env, "No path to GDX file given").Value()
+    );
+	}
+	
+	return deferred.Promise();
 }
 
-int main(int argc, char *argv[]) {
-	// define all variables used
-	gdxHandle_t PGX = NULL;
-	char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
-	int         ErrNr;
-	int         VarNr;
-	int         SymNr;
-	int         UniqReqs;
-	int         NrRecs;
-	int         N;
-	int         Dim;
-	int         VarTyp;
-	int         D;
-	int         S;
-	// set directory for dynamilk link files
-	strcpy(Sysdir, "dll");
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set(
+    Napi::String::New(env, "readGDX"),
+    Napi::Function::New(env, ReadGDX)
+  );
+  return exports;
+}
 
-	if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
-		cout << "**** Could not load GDX library" << endl << "**** " << Msg << endl;
-		exit(1);
-	}
-
-	GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
-
-	gdxOpenRead(PGX, argv[1], &ErrNr);
-	if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
-
-	gdxSystemInfo(PGX, &SymNr, &UniqReqs);
-	cout << "Symbols in GDX: " << SymNr << ", and " << UniqReqs << " unique records." << endl;
-
-	// init empty JS object
-
-	for (S = 1; S <= SymNr; S++) {
-	  VarNr = S;
-		gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
-		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
-		// add VarName as object property and assing empty vector of length N as its value
-		for (size_t i = 0; i < NrRecs; i++) {
-			gdxDataReadStr(PGX, Indx, Values, &N);
-			for (D = 0; D < Dim; D++) {
-				cout << (D ? '.' : ' ') << Indx[D];
-				cout << " = " << Values[GMS_VAL_LEVEL] << endl;
-			};
-		};
-		cout << "All solution values shown" << endl;
-		gdxDataReadDone(PGX);
-	}
-
-	if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
-
-	return 0;
-} /* main */
+NODE_API_MODULE(addon, Init)
