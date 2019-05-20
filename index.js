@@ -1,2 +1,2 @@
 var binding = require('./build/Release/node-gdx.node')
-module.exports = binding.readGDX
+module.exports = binding
