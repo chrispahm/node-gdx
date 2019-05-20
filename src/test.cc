@@ -26,16 +26,18 @@
 
  /*
    Use this command to compile the example:
-   g++ ./src/test.cc ./src/api/gdxcc.c
+   g++ ./src/test.cc ./src/api/gdxcc.c -o prebuilds test
  */
 
 #include <string>
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <napi.h>
 #include "api/gdxcc.h"
 
 using namespace std;
+using namespace Napi;
 
 static gdxStrIndexPtrs_t Indx;
 static gdxStrIndex_t     IndxXXX;
@@ -58,7 +60,7 @@ void ReportIOError(int N, const std::string &msg) {
 int main(int argc, char *argv[]) {
 	// define all variables used
 	gdxHandle_t PGX = NULL;
-	char        Msg[GMS_SSSIZE], Producer[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
+	char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
 	int         ErrNr;
 	int         VarNr;
 	int         SymNr;
@@ -81,23 +83,26 @@ int main(int argc, char *argv[]) {
 
 	gdxOpenRead(PGX, argv[1], &ErrNr);
 	if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
-	
+
 	gdxSystemInfo(PGX, &SymNr, &UniqReqs);
 	cout << "Symbols in GDX: " << SymNr << ", and " << UniqReqs << " unique records." << endl;
-	
+
+	// init empty JS object
+
 	for (S = 1; S <= SymNr; S++) {
 	  VarNr = S;
 		gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
 		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
+		// add VarName as object property and assing empty vector of length N as its value
 		while (gdxDataReadStr(PGX, Indx, Values, &N)) {
-			if (0 == Values[GMS_VAL_LEVEL]) continue; /* skip level 0.0 is default */
+			// if (0 == Values[GMS_VAL_LEVEL]) continue; /* skip level 0.0 is default */
 			for (D = 0; D < Dim; D++) cout << (D ? '.' : ' ') << Indx[D];
 			cout << " = " << Values[GMS_VAL_LEVEL] << endl;
 		}
 		cout << "All solution values shown" << endl;
 		gdxDataReadDone(PGX);
 	}
-	
+
 	if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
 
 	return 0;
