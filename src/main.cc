@@ -137,8 +137,8 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		std::string pathString = info[0].As<Napi::String>();
 		std::string symbolString = info[1].As<Napi::String>();
 		
-		char symbol[symbolString.size() + 1];
-		char path[pathString.size() + 1];
+		char* symbol = new char[symbolString.size() + 1];
+		char* path = new char[pathString.size() + 1];
 		
 		strcpy(symbol, symbolString.c_str());
 		strcpy(path, pathString.c_str());
