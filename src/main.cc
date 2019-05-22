@@ -58,24 +58,25 @@ void ReportIOError(int N, const std::string &msg) {
 	exit(1);
 }
 
+
 Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 	// setup default napi environment
 	Napi::Env env = info.Env();
 	auto deferred = Napi::Promise::Deferred::New(env);
-	
+  
 	if (info.Length() < 1) {
 		deferred.Reject(
 			Napi::TypeError::New(env, "No path to GDX file given").Value()
 		);
-	} else if (!info[0].IsString()) { 
+	} else if (!info[0].IsString()) {
 		deferred.Reject(
       Napi::TypeError::New(env, "Invalid argument type").Value()
     );
 	} else if (info.Length() == 1) {
 		std::string pathString = info[0].As<Napi::String>();
-		char path[pathString.size() + 1];
+		char* path = new char[pathString.size() + 1];
 		strcpy(path, pathString.c_str());
-		
+
 		// define all variables used
 		gdxHandle_t PGX = NULL;
 		char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
@@ -116,7 +117,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 			// length NrRecs as its value
 			Napi::Array array = Napi::Array::New(env);
 			data.Set(VarName, array);
-			
+
 			for (int i = 0; i < NrRecs; i++) {
 				Napi::Object row = Object::New(env);
 				gdxDataReadStr(PGX, Indx, Values, &N);
@@ -130,7 +131,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		gdxDataReadDone(PGX);
 
 		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
-		
+
 		deferred.Resolve(data);
 	} else if (info.Length() == 2) {
 		std::string pathString = info[0].As<Napi::String>();
@@ -197,7 +198,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 			Napi::TypeError::New(env, "Too many arguments passed.").Value()
 		);
 	}
-	
+
 	return deferred.Promise();
 }
 
