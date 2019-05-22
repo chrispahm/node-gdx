@@ -63,7 +63,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 	Napi::Env env = info.Env();
 	auto deferred = Napi::Promise::Deferred::New(env);
 	
-	if (info.Length() != 1) {
+	if (info.Length() < 1) {
 		deferred.Reject(
 			Napi::TypeError::New(env, "No path to GDX file given").Value()
 		);
@@ -71,7 +71,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		deferred.Reject(
       Napi::TypeError::New(env, "Invalid argument type").Value()
     );
-	} else {
+	} else if (info.Length() == 1) {
 		std::string pathString = info[0].As<Napi::String>();
 		char path[pathString.size() + 1];
 		strcpy(path, pathString.c_str());
@@ -132,6 +132,70 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
 		
 		deferred.Resolve(data);
+	} else if (info.Length() == 2) {
+		std::string pathString = info[0].As<Napi::String>();
+		std::string symbolString = info[1].As<Napi::String>();
+		
+		char symbol[symbolString.size() + 1];
+		char path[pathString.size() + 1];
+		
+		strcpy(symbol, symbolString.c_str());
+		strcpy(path, pathString.c_str());
+		
+		// define all variables used
+		gdxHandle_t PGX = NULL;
+		char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
+		int         ErrNr;
+		int         VarNr;
+		int         NrRecs;
+		int         N;
+		int         Dim;
+		int         VarTyp;
+		int         D;
+		// set directory for dynamilk link files
+		strcpy(Sysdir, "dll");
+
+		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
+			cout << "**** Could not load GDX library" << endl << "**** "
+					 << Msg << endl;
+			exit(1);
+		}
+
+		GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
+
+		gdxOpenRead(PGX, path, &ErrNr);
+		if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
+
+		if (!gdxFindSymbol(PGX, symbol, &VarNr)) {
+			cout << "**** Could not find variable '"<< symbol << "'"<< endl;
+			exit(1);
+		}
+		
+		gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
+		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
+		// add VarName as object property and assign empty vector of
+		// length NrRecs as its value
+		Napi::Array array = Napi::Array::New(env);
+
+		for (int i = 0; i < NrRecs; i++) {
+			Napi::Object row = Object::New(env);
+			gdxDataReadStr(PGX, Indx, Values, &N);
+			for (D = 0; D < Dim; D++) {
+				row.Set(D, Indx[D]);
+			};
+			row.Set("Value", Values[GMS_VAL_LEVEL]);
+			array[i] = row;
+		};
+
+		gdxDataReadDone(PGX);
+
+		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
+		
+		deferred.Resolve(array);
+	} else {
+		deferred.Reject(
+			Napi::TypeError::New(env, "Too many arguments passed.").Value()
+		);
 	}
 	
 	return deferred.Promise();
