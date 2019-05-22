@@ -25,3 +25,11 @@ gdx.read('test/test.gdx')
   .catch(e => {
     console.error(e);
   })
+
+// check if parameter is read correctly
+gdx.read('test/test.gdx', 'Demand')
+.then(data => {
+  assert.deepEqual(data,expected.Demand)
+}).catch(e => {
+  console.error(e)
+})
