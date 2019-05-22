@@ -5,6 +5,7 @@ Read GAMS GDX files in Node.js. Does NOT require a GAMS installation.
 ```js
 const gdx = require('node-gdx')
 
+// read a whole gdx file
 gdx.read('path/to/file.gdx')
   .then(data => {
     /* where data = {
@@ -12,17 +13,24 @@ gdx.read('path/to/file.gdx')
           '0': 'New-York',
           Value: 324
         },
-        {
-          '0': 'Chicago',
-          Value: 299
-        },
-        {
-          '0': 'Topeka',
-          Value: 274
-        }
+        ...
       ]
     }
-    ]
+    */
+  })
+  .catch(e => {
+    console.error(e)
+  })
+  
+// read a single symbol
+gdx.read('path/to/file.gdx', 'Demand')
+  .then(data => {
+    /* where data = [{
+          '0': 'New-York',
+          Value: 324
+        },
+        ...
+      ]
     */
   })
   .catch(e => {
