@@ -1,6 +1,6 @@
 {
   "name": "node-gdx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node.js bindings for GAMS GDX containers.",
   "main": "index.js",
   "directories": {
@@ -31,6 +31,5 @@
   "devDependencies": {
     "node-gyp": "^4.0.0",
     "prebuildify": "^3.0.0"
-  },
-  "gypfile": true
+  }
 }
