@@ -6,8 +6,9 @@
   "directories": {
     "test": "test"
   },
+  "repository": "https://github.com/chrispahm/node-gdx",
   "engines": {
-    "node": ">= 4.0.0"
+    "node": ">= 8.0.0"
   },
   "scripts": {
     "test": "node test/test.js",
