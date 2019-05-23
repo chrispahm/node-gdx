@@ -43,27 +43,11 @@ static gdxStrIndexPtrs_t Indx;
 static gdxStrIndex_t     IndxXXX;
 static gdxValues_t       Values;
 
-void ReportGDXError(gdxHandle_t PGX) {
-	char S[GMS_SSSIZE];
-
-	std::cout << "**** Fatal GDX Error" << endl;
-	gdxErrorStr(PGX, gdxGetLastError(PGX), S);
-	std::cout << "**** " << S << endl;
-	exit(1);
-}
-
-void ReportIOError(int N, const std::string &msg) {
-	std::cout << "**** Fatal I/O Error = " << N << " when calling "
-	          << msg << endl;
-	exit(1);
-}
-
-
 Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 	// setup default napi environment
 	Napi::Env env = info.Env();
 	auto deferred = Napi::Promise::Deferred::New(env);
-  
+
 	if (info.Length() < 1) {
 		deferred.Reject(
 			Napi::TypeError::New(env, "No path to GDX file given").Value()
@@ -94,15 +78,21 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		strcpy(Sysdir, "dll");
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
-			cout << "**** Could not load GDX library" << endl << "**** "
-					 << Msg << endl;
-			exit(1);
+			deferred.Reject(
+		    Napi::TypeError::New(env, "Could not load GDX library").Value()
+		  );
+			return deferred.Promise();
 		}
 
 		GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
 
 		gdxOpenRead(PGX, path, &ErrNr);
-		if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
+		if (ErrNr) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "Failed to open GDX").Value()
+			);
+			return deferred.Promise();
+		}
 
 		gdxSystemInfo(PGX, &SymNr, &UniqReqs);
 
@@ -112,7 +102,14 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		for (S = 1; S <= SymNr; S++) {
 			VarNr = S;
 			gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
-			if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
+			if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) {
+				char S[GMS_SSSIZE];
+				gdxErrorStr(PGX, gdxGetLastError(PGX), S);
+				deferred.Reject(
+					Napi::TypeError::New(env, S).Value()
+				);
+				return deferred.Promise();
+			}
 			// add VarName as object property and assign empty vector of
 			// length NrRecs as its value
 			Napi::Array array = Napi::Array::New(env);
@@ -130,19 +127,24 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		};
 		gdxDataReadDone(PGX);
 
-		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
+		if ((ErrNr = gdxClose(PGX))) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "Could not close GDX file.").Value()
+			);
+			return deferred.Promise();
+		};
 
 		deferred.Resolve(data);
 	} else if (info.Length() == 2) {
 		std::string pathString = info[0].As<Napi::String>();
 		std::string symbolString = info[1].As<Napi::String>();
-		
+
 		char* symbol = new char[symbolString.size() + 1];
 		char* path = new char[pathString.size() + 1];
-		
+
 		strcpy(symbol, symbolString.c_str());
 		strcpy(path, pathString.c_str());
-		
+
 		// define all variables used
 		gdxHandle_t PGX = NULL;
 		char        Msg[GMS_SSSIZE], Sysdir[GMS_SSSIZE], VarName[GMS_SSSIZE];
@@ -157,23 +159,38 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		strcpy(Sysdir, "dll");
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
-			cout << "**** Could not load GDX library" << endl << "**** "
-					 << Msg << endl;
-			exit(1);
+			deferred.Reject(
+				Napi::TypeError::New(env, "Could not load GDX library").Value()
+			);
+			return deferred.Promise();
 		}
 
 		GDXSTRINDEXPTRS_INIT(IndxXXX, Indx);
 
 		gdxOpenRead(PGX, path, &ErrNr);
-		if (ErrNr) ReportIOError(ErrNr, "gdxOpenRead");
+		if (ErrNr) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "Could not read GDX file.").Value()
+			);
+			return deferred.Promise();
+		}
 
 		if (!gdxFindSymbol(PGX, symbol, &VarNr)) {
-			cout << "**** Could not find variable '"<< symbol << "'"<< endl;
-			exit(1);
+			deferred.Reject(
+				Napi::TypeError::New(env, "Could not find symbol.").Value()
+			);
+			return deferred.Promise();
 		}
-		
+
 		gdxSymbolInfo(PGX, VarNr, VarName, &Dim, &VarTyp);
-		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) ReportGDXError(PGX);
+		if (!gdxDataReadStrStart(PGX, VarNr, &NrRecs)) {
+			char S[GMS_SSSIZE];
+			gdxErrorStr(PGX, gdxGetLastError(PGX), S);
+			deferred.Reject(
+				Napi::TypeError::New(env, S).Value()
+			);
+			return deferred.Promise();
+		}
 		// add VarName as object property and assign empty vector of
 		// length NrRecs as its value
 		Napi::Array array = Napi::Array::New(env);
@@ -190,8 +207,13 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 
 		gdxDataReadDone(PGX);
 
-		if ((ErrNr = gdxClose(PGX))) ReportIOError(ErrNr, "gdxClose");
-		
+		if ((ErrNr = gdxClose(PGX))) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "Could not close GDX").Value()
+			);
+			return deferred.Promise();
+		}
+
 		deferred.Resolve(array);
 	} else {
 		deferred.Reject(
