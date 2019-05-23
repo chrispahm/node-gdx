@@ -6,10 +6,15 @@
   "directories": {
     "test": "test"
   },
+  "repository": "https://github.com/chrispahm/node-gdx",
+  "engines": {
+    "node": ">= 8.0.0"
+  },
   "scripts": {
     "test": "node test/test.js",
     "clean": "node-gyp clean",
-    "build": "node-gyp rebuild"
+    "build": "node-gyp rebuild",
+    "install": "node-gyp-build"
   },
   "keywords": [
     "GDX",
@@ -20,9 +25,12 @@
   "license": "MIT",
   "gypfile": true,
   "dependencies": {
-    "node-addon-api": "^1.6.3"
+    "node-addon-api": "^1.6.3",
+    "node-gyp-build": "^4.1.0"
   },
   "devDependencies": {
-    "node-gyp": "^4.0.0"
-  }
+    "node-gyp": "^4.0.0",
+    "prebuildify": "^3.0.0"
+  },
+  "gypfile": true
 }
