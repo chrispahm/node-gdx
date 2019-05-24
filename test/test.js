@@ -26,6 +26,7 @@ gdx.read('test/test.gdx')
     console.error(e);
   })
 
+
 // check if parameter is read correctly
 gdx.read('test/test.gdx', 'Demand')
 .then(data => {

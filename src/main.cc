@@ -48,17 +48,18 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 	Napi::Env env = info.Env();
 	auto deferred = Napi::Promise::Deferred::New(env);
 
-	if (info.Length() < 1) {
+	if (info.Length() < 2) {
 		deferred.Reject(
 			Napi::TypeError::New(env, "No path to GDX file given").Value()
 		);
-	} else if (!info[0].IsString()) {
+	} else if (!info[1].IsString()) {
 		deferred.Reject(
       Napi::TypeError::New(env, "Invalid argument type").Value()
     );
-	} else if (info.Length() == 1) {
-		std::string pathString = info[0].As<Napi::String>();
-		char* path = new char[pathString.size() + 1];
+	} else if (info.Length() == 2) {
+    std::string dllString  = info[0].As<Napi::String>();
+		std::string pathString = info[1].As<Napi::String>();
+    char* path = new char[pathString.size() + 1];
 		strcpy(path, pathString.c_str());
 
 		// define all variables used
@@ -75,7 +76,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		int         D;
 		int         S;
 		// set directory for dynamilk link files
-		strcpy(Sysdir, "dll");
+		strcpy(Sysdir, dllString.c_str());
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
 			deferred.Reject(
@@ -135,9 +136,10 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		};
 
 		deferred.Resolve(data);
-	} else if (info.Length() == 2) {
-		std::string pathString = info[0].As<Napi::String>();
-		std::string symbolString = info[1].As<Napi::String>();
+	} else if (info.Length() == 3) {
+		std::string dllString  = info[0].As<Napi::String>();
+		std::string pathString = info[1].As<Napi::String>();
+		std::string symbolString = info[2].As<Napi::String>();
 
 		char* symbol = new char[symbolString.size() + 1];
 		char* path = new char[pathString.size() + 1];
@@ -156,7 +158,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		int         VarTyp;
 		int         D;
 		// set directory for dynamilk link files
-		strcpy(Sysdir, "dll");
+		strcpy(Sysdir, dllString.c_str());
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
 			deferred.Reject(
