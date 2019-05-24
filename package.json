@@ -14,7 +14,8 @@
     "test": "node test/test.js",
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild",
-    "install": "node-gyp-build"
+    "install": "node-gyp-build",
+    "prebuild": "prebuildify --napi --strip"
   },
   "keywords": [
     "GDX",
