@@ -1,6 +1,6 @@
 {
   "name": "node-gdx",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node.js bindings for GAMS GDX containers.",
   "main": "index.js",
   "directories": {
