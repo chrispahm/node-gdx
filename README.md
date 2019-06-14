@@ -1,6 +1,11 @@
 # node-gdx
 Read GAMS GDX files in Node.js. Does NOT require a GAMS installation.
 
+## Installation
+```
+npm i node-gdx
+```
+
 ## Usage
 ```js
 const gdx = require('node-gdx')
