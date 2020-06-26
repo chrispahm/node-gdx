@@ -15,7 +15,7 @@
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild",
     "install": "node-gyp-build",
-    "prebuild": "prebuildify --napi --strip"
+    "prebuild": "prebuildify --napi -t 12.0.0 --strip"
   },
   "keywords": [
     "GDX",
@@ -26,11 +26,11 @@
   "license": "MIT",
   "gypfile": true,
   "dependencies": {
-    "node-addon-api": "^1.6.3",
-    "node-gyp-build": "^4.1.0"
+    "node-addon-api": "^3.0.0",
+    "node-gyp-build": "^4.2.2"
   },
   "devDependencies": {
-    "node-gyp": "^4.0.0",
-    "prebuildify": "^3.0.0"
+    "node-gyp": "^7.0.0",
+    "prebuildify": "^4.0.0"
   }
 }
