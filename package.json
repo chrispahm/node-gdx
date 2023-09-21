@@ -16,7 +16,7 @@
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild --openssl_fips=''",
     "install": "node-gyp-build",
-    "prebuild": "prebuildify --napi -t 12.0.0 --strip --openssl_fips=''"
+    "prebuild": "prebuildify --napi -t 12.0.0 -t electron@3.0.0 --strip --openssl_fips=''"
   },
   "keywords": [
     "GDX",
