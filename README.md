@@ -46,7 +46,7 @@ gdx.read('path/to/file.gdx', 'Demand')
 ```
 
 ## API
-### read(file: string, *symbol: string*)
+### read(file: string, *symbol: string*, *overrideDllPath: string*)
 
 Read a GDX file from disk. Returns all symbols in the GDX container by default,
 unless otherwise specified by the optional second function argument.

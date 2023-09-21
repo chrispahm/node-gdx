@@ -5,17 +5,20 @@ const gdx = require('node-gyp-build')(__dirname)
 
 module.exports = (options = {}) => {
   let defaultDllPath = join(__dirname, 'dll', os.platform() + '-' + os.arch())
-  if (!existsSync(defaultDllPath) && !options.gamsPath) {
-    throw new Error('Could not find GAMS DLL. Please specify the path to the GAMS DLL.')
-  }
+  let defaultDLLExists = existsSync(defaultDllPath)
+
   const {
     gamsPath = options.gamsPath || defaultDllPath
   } = options
 
   return {
-    read(path, symbol) {
-      if (symbol) return gdx.read(gamsPath, path, symbol)
-      else return gdx.read(gamsPath, path)
+    read(path, symbol, overrideDllPath) {
+      if (!defaultDLLExists && !options.gamsPath && !overrideDllPath) {
+        throw new Error('Could not find GAMS DLL. Please specify the path to the GAMS DLL.')
+      }
+
+      if (symbol) return gdx.read(overrideDllPath || gamsPath, path, symbol)
+      else return gdx.read(overrideDllPath || gamsPath, path)
     }
   }
 }
