@@ -79,6 +79,7 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		strcpy(Sysdir, dllString.c_str());
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
+			cout << "Could not create GDX handle: " << Msg << endl;
 			deferred.Reject(
 		    Napi::TypeError::New(env, "Could not load GDX library").Value()
 		  );

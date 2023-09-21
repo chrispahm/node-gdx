@@ -1,6 +1,6 @@
 {
   "name": "node-gdx",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "Node.js bindings for GAMS GDX containers.",
   "main": "index.js",
   "directories": {
@@ -11,11 +11,12 @@
     "node": ">= 8.0.0"
   },
   "scripts": {
+    "preinstall": "npm i node-addon-api",
     "test": "node test/test.js",
     "clean": "node-gyp clean",
-    "build": "node-gyp rebuild",
+    "build": "node-gyp rebuild --openssl_fips=''",
     "install": "node-gyp-build",
-    "prebuild": "prebuildify --napi -t 12.0.0 --strip"
+    "prebuild": "prebuildify --napi -t 12.0.0 --strip --openssl_fips=''"
   },
   "keywords": [
     "GDX",
@@ -26,11 +27,11 @@
   "license": "MIT",
   "gypfile": true,
   "dependencies": {
-    "node-addon-api": "^3.0.0",
-    "node-gyp-build": "^4.2.2"
+    "node-addon-api": "^7.0.0",
+    "node-gyp-build": "^4.6.0"
   },
   "devDependencies": {
-    "node-gyp": "^7.0.0",
-    "prebuildify": "^4.0.0"
+    "node-gyp": "^9.3.1",
+    "prebuildify": "^5.0.1"
   }
 }

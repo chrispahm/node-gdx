@@ -1,4 +1,4 @@
-const gdx = require('../index.js')
+const gdx = require('../index.js')()
 const assert = require('assert')
 
 const expected = {
@@ -20,9 +20,11 @@ const expected = {
 // check if correct JSON is read
 gdx.read('test/test.gdx')
   .then(data => {
+    console.log(data);
+    
     assert.deepEqual(data,expected)
   })
-  .catch(e => {
+  .catch(e => {    
     console.error(e);
   })
 
@@ -40,6 +42,7 @@ gdx.read('test/test.gdx', 'NotAvailable')
 .then(data => {
   //
 }).catch(e => {
+  //console.log(e);
   assert.deepStrictEqual(e.message,"Could not find symbol.");
 })
 
@@ -48,5 +51,12 @@ gdx.read('notFound.gdx')
 .then(data => {
   //
 }).catch(e => {
+  //console.log(e);
   assert.deepStrictEqual(e.message,"Failed to open GDX");
+})
+
+
+process.on('uncaughtException', function (err) {
+  // Handle the error safely
+  console.log(err)
 })

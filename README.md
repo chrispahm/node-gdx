@@ -1,5 +1,5 @@
 # node-gdx
-Read GAMS GDX files in Node.js. Does NOT require a GAMS installation.
+Read GAMS GDX files in Node.js. Does NOT require a GAMS installation for macOS & Windows systems.
 
 ## Installation
 ```
@@ -8,7 +8,9 @@ npm i node-gdx
 
 ## Usage
 ```js
-const gdx = require('node-gdx')
+const gdx = require('node-gdx')({
+  gamsPath: "/path/to/gams/installation" // this is optional for macOS & Windows!
+})
 
 // read a whole gdx file
 gdx.read('path/to/file.gdx')
