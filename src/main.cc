@@ -76,7 +76,13 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		int         D;
 		int         S;
 		// set directory for dynamilk link files
-		strcpy(Sysdir, dllString.c_str());
+		if (dllString.size() >= GMS_SSSIZE) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "GAMS system directory path is too long").Value()
+			);
+			return deferred.Promise();
+		}
+		snprintf(Sysdir, sizeof(Sysdir), "%s", dllString.c_str());
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
 			cout << "Could not create GDX handle: " << Msg << endl;
@@ -159,7 +165,13 @@ Napi::Promise ReadGDX(const Napi::CallbackInfo& info) {
 		int         VarTyp;
 		int         D;
 		// set directory for dynamilk link files
-		strcpy(Sysdir, dllString.c_str());
+		if (dllString.size() >= GMS_SSSIZE) {
+			deferred.Reject(
+				Napi::TypeError::New(env, "GAMS system directory path is too long").Value()
+			);
+			return deferred.Promise();
+		}
+		snprintf(Sysdir, sizeof(Sysdir), "%s", dllString.c_str());
 
 		if (!gdxCreateD(&PGX, Sysdir, Msg, sizeof(Msg))) {
 			deferred.Reject(
